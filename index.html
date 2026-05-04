@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제2의 인생을 찾아서 🎮 게임 QA 실장의 새 출발</title>
+<style>
+  :root {
+    --primary: #6c63ff;
+    --secondary: #ff6584;
+    --accent: #43e97b;
+    --warning: #f7971e;
+    --gold: #ffd200;
+    --bg: #0f0e17;
+    --card: #1a1a2e;
+    --card2: #16213e;
+    --text: #fffffe;
+    --muted: #a7a9be;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ───── STARS ───── */
+  #stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(ellipse at 20% 50%, #1a0533 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, #001533 0%, transparent 60%),
+                var(--bg);
+  }
+  .star {
+    position: absolute; border-radius: 50%; background: #fff;
+    animation: twinkle var(--d, 3s) var(--delay, 0s) infinite alternate;
+  }
+  @keyframes twinkle { from { opacity: .2; transform: scale(.8); } to { opacity: 1; transform: scale(1.2); } }
+
+  /* ───── LAYOUT ───── */
+  #app {
+    position: relative; z-index: 1;
+    max-width: 480px; margin: 0 auto;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    padding: 0 16px 32px;
+  }
+
+  /* ───── PROGRESS ───── */
+  #progress-wrap { padding: 16px 0 8px; display: none; }
+  .stage-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-bottom: 6px; }
+  .progress-track { height: 8px; background: #2a2a4a; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width .6s cubic-bezier(.4,0,.2,1); }
+  .stage-dots { display: flex; justify-content: space-between; margin-top: 6px; }
+  .stage-dot { width: 10px; height: 10px; border-radius: 50%; background: #2a2a4a; border: 2px solid #3a3a6a; transition: all .3s; }
+  .stage-dot.done { background: var(--primary); border-color: var(--primary); }
+  .stage-dot.active { background: var(--secondary); border-color: var(--secondary); box-shadow: 0 0 8px var(--secondary); }
+
+  /* ───── SCREENS ───── */
+  .screen { display: none; flex-direction: column; align-items: center; flex: 1; padding-top: 24px; animation: fadeSlideIn .4s ease; }
+  .screen.active { display: flex; }
+  @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ───── TITLE ───── */
+  .title-wrap { text-align: center; margin-top: 24px; }
+  .career-badge { display: inline-block; background: linear-gradient(135deg, #6c63ff22, #ff658422); border: 1px solid #6c63ff66; border-radius: 20px; padding: 4px 16px; font-size: 12px; color: var(--primary); margin-bottom: 16px; letter-spacing: 2px; }
+  .game-title { font-size: 28px; font-weight: 900; line-height: 1.2; background: linear-gradient(135deg, #fff 0%, #c3b1e1 50%, #ff6584 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; }
+  .game-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 32px; }
+
+  /* ───── PIXEL CHARACTER ───── */
+  .character-stage { position: relative; width: 200px; height: 200px; margin: 0 auto 24px; }
+  .char-shadow { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 60px; height: 10px; background: rgba(108,99,255,.3); border-radius: 50%; animation: shadowPulse 1s ease-in-out infinite alternate; }
+  @keyframes shadowPulse { from { transform: translateX(-50%) scale(.9); } to { transform: translateX(-50%) scale(1.1); } }
+  .pixel-char { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); image-rendering: pixelated; animation: charBob 1.2s ease-in-out infinite alternate; }
+  @keyframes charBob { from { transform: translateX(-50%) translateY(0); } to { transform: translateX(-50%) translateY(-8px); } }
+
+  /* CSS Pixel Art — 40대 직장인 캐릭터 */
+  .char-body { position: relative; width: 64px; height: 80px; }
+  .char-head { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 32px; height: 28px; background: #ffd5a8; border-radius: 8px 8px 4px 4px; box-shadow: 0 0 0 2px #cc9970; }
+  .char-hair { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); width: 36px; height: 14px; background: #999; border-radius: 8px 8px 0 0; box-shadow: 0 0 0 1px #777; }
+  .char-eyes { position: absolute; top: 11px; left: 50%; transform: translateX(-50%); width: 24px; height: 4px; display: flex; justify-content: space-between; align-items: center; }
+  .char-eye { width: 6px; height: 6px; background: #2a1a10; border-radius: 50%; }
+  .char-glasses { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 30px; height: 10px; border: 2px solid #999; border-radius: 3px; background: transparent; pointer-events: none; }
+  .char-smile { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 12px; height: 4px; border-bottom: 2px solid #cc6644; border-radius: 0 0 6px 6px; }
+  .char-torso { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); width: 28px; height: 24px; background: #2a2a5a; border-radius: 4px; box-shadow: 0 0 0 2px #1a1a3a; }
+  .char-tie { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); width: 6px; height: 16px; background: var(--secondary); border-radius: 0 0 3px 3px; z-index: 1; }
+  .char-briefcase { position: absolute; top: 40px; right: 2px; width: 16px; height: 13px; background: var(--gold); border-radius: 2px; box-shadow: 0 0 0 1px #cc9900; }
+  .char-briefcase::before { content: ''; position: absolute; top: -4px; left: 3px; width: 10px; height: 5px; border: 2px solid #cc9900; border-bottom: none; border-radius: 2px 2px 0 0; }
+  .char-legs { position: absolute; top: 54px; left: 50%; transform: translateX(-50%); width: 28px; height: 20px; display: flex; gap: 4px; }
+  .char-leg { flex: 1; background: #2a2a5a; border-radius: 0 0 3px 3px; }
+  .char-shoes { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: 32px; display: flex; gap: 6px; }
+  .char-shoe { flex: 1; height: 8px; background: #1a1a1a; border-radius: 2px; }
+
+  /* ───── STAT BUBBLES ───── */
+  .stat-bubbles { position: absolute; inset: 0; }
+  .stat-bubble { position: absolute; background: var(--card); border: 1px solid #3a3a6a; border-radius: 12px; padding: 4px 8px; font-size: 11px; white-space: nowrap; animation: bubbleFloat var(--d,3s) var(--delay,0s) ease-in-out infinite alternate; }
+  @keyframes bubbleFloat { from { transform: translateY(0) scale(1); } to { transform: translateY(-6px) scale(1.05); } }
+
+  /* ───── BUTTONS ───── */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 32px; border-radius: 50px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; transition: all .2s; letter-spacing: .5px; font-family: inherit; }
+  .btn:active { transform: scale(.96); }
+  .btn-primary { background: linear-gradient(135deg, var(--primary), #8b80ff); color: #fff; box-shadow: 0 4px 20px rgba(108,99,255,.4); }
+  .btn-primary:hover { box-shadow: 0 6px 28px rgba(108,99,255,.6); transform: translateY(-2px); }
+  .btn-secondary { background: transparent; color: var(--muted); border: 1px solid #3a3a6a; padding: 10px 20px; font-size: 13px; }
+  .btn-wide { width: 100%; }
+
+  /* ───── QUESTION ───── */
+  .q-header { text-align: center; margin-bottom: 24px; width: 100%; }
+  .q-stage-tag { display: inline-block; background: linear-gradient(135deg, var(--primary)22, var(--secondary)22); border: 1px solid var(--primary)66; border-radius: 20px; padding: 3px 14px; font-size: 11px; color: var(--primary); margin-bottom: 10px; letter-spacing: 1px; }
+  .q-title { font-size: 20px; font-weight: 800; line-height: 1.4; margin-bottom: 6px; }
+  .q-sub { font-size: 13px; color: var(--muted); }
+
+  /* ───── CHOICE CARDS ───── */
+  .choices-grid { display: grid; gap: 10px; width: 100%; }
+  .choices-grid.cols2 { grid-template-columns: 1fr 1fr; }
+  .choices-grid.cols1 { grid-template-columns: 1fr; }
+  .choice-card { background: var(--card); border: 2px solid #2a2a4a; border-radius: 16px; padding: 14px; cursor: pointer; transition: all .2s; text-align: center; position: relative; overflow: hidden; }
+  .choice-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, var(--primary)00, var(--primary)11); opacity: 0; transition: opacity .2s; }
+  .choice-card:hover { border-color: var(--primary)88; transform: translateY(-2px); }
+  .choice-card:hover::before { opacity: 1; }
+  .choice-card.selected { border-color: var(--primary); background: var(--primary)22; box-shadow: 0 0 16px var(--primary)44; }
+  .choice-card.selected::after { content: '✓'; position: absolute; top: 8px; right: 10px; color: var(--primary); font-weight: 900; font-size: 14px; }
+  .choice-emoji { font-size: 32px; margin-bottom: 8px; display: block; }
+  .choice-label { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .choice-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+  /* ───── MULTI SELECT HINT ───── */
+  .select-hint { font-size: 12px; color: var(--warning); text-align: center; margin-bottom: 12px; padding: 6px 12px; background: var(--warning)11; border-radius: 20px; border: 1px solid var(--warning)44; }
+
+  /* ───── STAT SCREEN ───── */
+  .stat-screen { width: 100%; }
+  .stat-title { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+  .stat-subtitle { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 24px; }
+  .stat-card { background: var(--card); border: 1px solid #2a2a4a; border-radius: 16px; padding: 20px; margin-bottom: 12px; }
+  .stat-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .stat-row:last-child { margin-bottom: 0; }
+  .stat-icon { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
+  .stat-info { flex: 1; }
+  .stat-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .stat-val { color: var(--primary); }
+  .stat-bar-bg { height: 8px; background: #2a2a4a; border-radius: 4px; overflow: hidden; }
+  .stat-bar-fill { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(.4,0,.2,1) var(--delay, 0s); }
+
+  /* ───── CAREER PATH CARDS ───── */
+  .career-card { background: var(--card); border: 2px solid #2a2a4a; border-radius: 16px; padding: 16px; cursor: pointer; transition: all .2s; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 14px; }
+  .career-card:hover { border-color: var(--accent)88; transform: translateY(-2px); }
+  .career-card.selected { border-color: var(--accent); background: var(--accent)11; }
+  .career-emoji-big { font-size: 36px; flex-shrink: 0; }
+  .career-info { flex: 1; }
+  .career-name { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
+  .career-subtitle { font-size: 11px; color: var(--primary); margin-bottom: 4px; }
+  .career-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 6px; }
+  .career-meta { font-size: 11px; color: var(--muted); }
+  .career-match { font-size: 11px; padding: 3px 10px; border-radius: 20px; margin-top: 6px; display: inline-block; }
+  .match-high { background: var(--accent)22; color: var(--accent); border: 1px solid var(--accent)44; }
+  .match-mid { background: var(--warning)22; color: var(--warning); border: 1px solid var(--warning)44; }
+  .match-low { background: #aaa2; color: var(--muted); border: 1px solid #aaa4; }
+
+  /* ───── RESULT ───── */
+  .result-screen { width: 100%; text-align: center; }
+  .result-badge { display: inline-block; margin-bottom: 16px; background: linear-gradient(135deg, var(--primary)33, var(--secondary)33); border: 2px solid var(--primary)66; border-radius: 20px; padding: 6px 20px; font-size: 12px; color: var(--primary); letter-spacing: 2px; }
+  .result-job { font-size: 32px; font-weight: 900; margin-bottom: 8px; background: linear-gradient(135deg, #fff, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.2; }
+  .result-emoji-big { font-size: 80px; display: block; margin: 16px 0; }
+  .result-desc { font-size: 14px; color: var(--muted); line-height: 1.8; margin-bottom: 24px; }
+
+  .result-path { background: var(--card); border: 1px solid #2a2a4a; border-radius: 16px; padding: 20px; margin-bottom: 16px; text-align: left; }
+  .path-title { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 12px; text-align: center; }
+  .path-steps { display: flex; flex-direction: column; gap: 0; }
+  .path-step { display: flex; align-items: flex-start; gap: 12px; position: relative; }
+  .path-step::before { content: ''; position: absolute; left: 14px; top: 28px; width: 2px; height: calc(100% + 4px); background: linear-gradient(180deg, var(--primary)88, transparent); }
+  .path-step:last-child::before { display: none; }
+  .path-dot { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; background: var(--primary)22; border: 2px solid var(--primary)66; margin-bottom: 12px; }
+  .path-content { padding-top: 4px; }
+  .path-stage { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .path-name { font-size: 14px; font-weight: 700; }
+
+  .result-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .result-stat-card { background: var(--card); border: 1px solid #2a2a4a; border-radius: 12px; padding: 14px; text-align: center; }
+  .result-stat-emoji { font-size: 24px; margin-bottom: 6px; }
+  .result-stat-name { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .result-stat-val { font-size: 20px; font-weight: 900; color: var(--primary); }
+
+  /* ───── RESOURCE LINKS ───── */
+  .resource-card { background: linear-gradient(135deg, var(--primary)11, var(--secondary)11); border: 1px solid #3a3a6a; border-radius: 12px; padding: 16px; margin-bottom: 16px; text-align: left; }
+  .resource-title { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 10px; text-align: center; }
+  .resource-link { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #2a2a4a; text-decoration: none; color: inherit; transition: opacity .2s; }
+  .resource-link:last-child { border-bottom: none; padding-bottom: 0; }
+  .resource-link:hover { opacity: .75; }
+  .resource-link-icon { font-size: 18px; flex-shrink: 0; }
+  .resource-link-info { flex: 1; }
+  .resource-link-name { font-size: 13px; font-weight: 700; color: var(--text); display: block; }
+  .resource-link-desc { font-size: 11px; color: var(--muted); }
+  .resource-link-arrow { font-size: 14px; color: var(--primary); }
+
+  /* ───── NAME INPUT ───── */
+  .name-wrap { width: 100%; }
+  .name-input { width: 100%; padding: 14px 20px; background: var(--card); border: 2px solid #2a2a4a; border-radius: 12px; color: var(--text); font-size: 16px; font-family: inherit; outline: none; transition: border-color .2s; margin-bottom: 16px; }
+  .name-input:focus { border-color: var(--primary); }
+  .name-input::placeholder { color: var(--muted); }
+
+  /* ───── ANALYZE ───── */
+  .analyze-wrap { text-align: center; padding: 40px 0; }
+  .analyze-orb { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 24px; background: conic-gradient(var(--primary), var(--secondary), var(--accent), var(--primary)); animation: orbSpin 1.5s linear infinite; box-shadow: 0 0 40px var(--primary)66; }
+  @keyframes orbSpin { to { transform: rotate(360deg); } }
+  .analyze-text { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .analyze-sub { font-size: 13px; color: var(--muted); }
+
+  /* ───── TOOLTIP ───── */
+  .tooltip { background: var(--card2); border: 1px solid var(--primary)44; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.6; }
+
+  /* ───── CONFETTI ───── */
+  .confetti-piece { position: fixed; width: 10px; height: 10px; border-radius: 2px; animation: confettiFall linear forwards; z-index: 999; pointer-events: none; }
+  @keyframes confettiFall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+
+  /* ───── UTILS ───── */
+  .mt-auto { margin-top: auto; }
+  .mb-12 { margin-bottom: 12px; }
+  .mb-20 { margin-bottom: 20px; }
+  .w-full { width: 100%; }
+  .text-center { text-align: center; }
+
+  @media (max-width: 360px) {
+    .game-title { font-size: 22px; }
+    .choices-grid.cols2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<div id="app">
+
+  <!-- PROGRESS BAR -->
+  <div id="progress-wrap">
+    <div class="stage-labels">
+      <span>상황분석</span><span>역량파악</span><span>커리어탐색</span><span>전략수립</span><span>새출발</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="stage-dots" id="stage-dots">
+      <div class="stage-dot"></div>
+      <div class="stage-dot"></div>
+      <div class="stage-dot"></div>
+      <div class="stage-dot"></div>
+      <div class="stage-dot"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SCREEN 0: TITLE ═══════════ -->
+  <div class="screen active" id="screen-title">
+    <div class="title-wrap w-full">
+      <div class="career-badge">🎮 게임 QA 실장 · 제2의 인생</div>
+      <div class="game-title">제2의 인생을<br>찾아서</div>
+      <div class="game-subtitle">퇴직을 앞둔 40대 게임 QA 실장의<br>새로운 출발 이야기</div>
+    </div>
+
+    <div class="character-stage">
+      <div class="stat-bubbles">
+        <div class="stat-bubble" style="top:10px;left:0;--d:2.5s;--delay:.3s">💎 전문성</div>
+        <div class="stat-bubble" style="top:10px;right:0;--d:3s;--delay:.8s">👑 리더십</div>
+        <div class="stat-bubble" style="bottom:40px;left:0;--d:2.8s;--delay:.1s">💡 혁신력</div>
+        <div class="stat-bubble" style="bottom:40px;right:0;--d:3.2s;--delay:.5s">🌐 네트워크</div>
+      </div>
+      <div class="pixel-char">
+        <div class="char-body">
+          <div class="char-hair"></div>
+          <div class="char-head">
+            <div class="char-glasses"></div>
+            <div class="char-eyes"><div class="char-eye"></div><div class="char-eye"></div></div>
+            <div class="char-smile"></div>
+          </div>
+          <div class="char-torso"></div>
+          <div class="char-tie"></div>
+          <div class="char-briefcase"></div>
+          <div class="char-legs"><div class="char-leg"></div><div class="char-leg"></div></div>
+          <div class="char-shoes"><div class="char-shoe"></div><div class="char-shoe"></div></div>
+        </div>
+      </div>
+      <div class="char-shadow"></div>
+    </div>
+
+    <div class="tooltip w-full mb-20">
+      🌟 20년 게임 QA 경력의 당신, 이제 새 챕터를 시작할 시간이에요.<br>
+      선택에 따라 <strong>제2의 커리어</strong>가 달라져요!
+    </div>
+
+    <button class="btn btn-primary btn-wide" onclick="startGame()">
+      🚀 게임 시작하기
+    </button>
+  </div>
+
+  <!-- ═══════════ SCREEN 1: NAME ═══════════ -->
+  <div class="screen" id="screen-name">
+    <div class="q-header w-full">
+      <div class="q-stage-tag">👔 캐릭터 설정</div>
+      <div class="q-title">어떻게 불러드릴까요?</div>
+      <div class="q-sub">게임 QA 실장, 제2의 인생을 준비 중이에요.</div>
+    </div>
+
+    <div class="character-stage" style="height:140px">
+      <div class="pixel-char">
+        <div class="char-body">
+          <div class="char-hair"></div>
+          <div class="char-head">
+            <div class="char-glasses"></div>
+            <div class="char-eyes"><div class="char-eye"></div><div class="char-eye"></div></div>
+            <div class="char-smile"></div>
+          </div>
+          <div class="char-torso"></div>
+          <div class="char-tie"></div>
+          <div class="char-briefcase"></div>
+          <div class="char-legs"><div class="char-leg"></div><div class="char-leg"></div></div>
+          <div class="char-shoes"><div class="char-shoe"></div><div class="char-shoe"></div></div>
+        </div>
+      </div>
+      <div class="char-shadow"></div>
+    </div>
+
+    <div class="name-wrap">
+      <input class="name-input" type="text" id="name-input" placeholder="이름 또는 닉네임 (예: 강민준)" maxlength="6">
+      <button class="btn btn-primary btn-wide" onclick="setName()">다음 →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ SCREEN 2: Q1 퇴직 이유 ═══════════ -->
+  <div class="screen" id="screen-q1">
+    <div class="q-header w-full">
+      <div class="q-stage-tag">🤔 현재 상황</div>
+      <div class="q-title">퇴직을 결심한 이유는?</div>
+      <div class="q-sub">솔직하게 <strong>2가지</strong>를 골라주세요!</div>
+    </div>
+
+    <div class="select-hint">⚡ 2개 선택</div>
+
+    <div class="choices-grid cols2 w-full mb-20" id="q1-choices">
+      <div class="choice-card" data-val="restructure" onclick="multiSelect(this,'q1',2)">
+        <span class="choice-emoji">🏳️</span>
+        <div class="choice-label">구조조정·권고사직</div>
+        <div class="choice-desc">회사 상황이 어려워졌어</div>
+      </div>
+      <div class="choice-card" data-val="burnout" onclick="multiSelect(this,'q1',2)">
+        <span class="choice-emoji">🔥</span>
+        <div class="choice-label">번아웃</div>
+        <div class="choice-desc">15년 야근이 한계야</div>
+      </div>
+      <div class="choice-card" data-val="meaning" onclick="multiSelect(this,'q1',2)">
+        <span class="choice-emoji">🌱</span>
+        <div class="choice-label">더 큰 의미 추구</div>
+        <div class="choice-desc">더 가치 있는 일을 하고 싶어</div>
+      </div>
+      <div class="choice-card" data-val="income" onclick="multiSelect(this,'q1',2)">
+        <span class="choice-emoji">💰</span>
+        <div class="choice-label">더 나은 수입</div>
+        <div class="choice-desc">연봉의 한계를 느꼈어</div>
+      </div>
+      <div class="choice-card" data-val="family" onclick="multiSelect(this,'q1',2)">
+        <span class="choice-emoji">👨‍👩‍👧</span>
+        <div class="choice-label">가족·라이프스타일</div>
+        <div class="choice-desc">가족과 더 많은 시간을</div>
+      </div>
+      <div class="choice-card" data-val="challenge" onclick="multiSelect(this,'q1',2)">
+        <span class="choice-emoji">🚀</span>
+        <div class="choice-label">새로운 도전</div>
+        <div class="choice-desc">새 분야에 뛰어들고 싶어</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-wide" id="q1-next" onclick="nextQ(1)" disabled>다음 →</button>
+  </div>
+
+  <!-- ═══════════ SCREEN 3: Q2 강점 ═══════════ -->
+  <div class="screen" id="screen-q2">
+    <div class="q-header w-full">
+      <div class="q-stage-tag">💪 역량 파악</div>
+      <div class="q-title">가장 자신 있는<br>역량은 무엇인가요?</div>
+      <div class="q-sub"><strong>2가지</strong>를 골라주세요!</div>
+    </div>
+
+    <div class="select-hint">⚡ 2개 선택</div>
+
+    <div class="choices-grid cols2 w-full mb-20" id="q2-choices">
+      <div class="choice-card" data-val="process" onclick="multiSelect(this,'q2',2)">
+        <span class="choice-emoji">📋</span>
+        <div class="choice-label">프로세스 설계</div>
+        <div class="choice-desc">테스트 체계 구축·표준화</div>
+      </div>
+      <div class="choice-card" data-val="mentoring" onclick="multiSelect(this,'q2',2)">
+        <span class="choice-emoji">👥</span>
+        <div class="choice-label">팀 육성·멘토링</div>
+        <div class="choice-desc">후배 성장시키는 게 보람 있어</div>
+      </div>
+      <div class="choice-card" data-val="risk" onclick="multiSelect(this,'q2',2)">
+        <span class="choice-emoji">⚡</span>
+        <div class="choice-label">리스크 판단</div>
+        <div class="choice-desc">Go/No-go 결정이 자신 있어</div>
+      </div>
+      <div class="choice-card" data-val="data" onclick="multiSelect(this,'q2',2)">
+        <span class="choice-emoji">📊</span>
+        <div class="choice-label">데이터 분석·보고</div>
+        <div class="choice-desc">숫자로 품질을 설명해</div>
+      </div>
+      <div class="choice-card" data-val="communication" onclick="multiSelect(this,'q2',2)">
+        <span class="choice-emoji">🤝</span>
+        <div class="choice-label">개발팀 협업</div>
+        <div class="choice-desc">다른 직군과 소통을 잘 해</div>
+      </div>
+      <div class="choice-card" data-val="domain" onclick="multiSelect(this,'q2',2)">
+        <span class="choice-emoji">🎮</span>
+        <div class="choice-label">게임 도메인 지식</div>
+        <div class="choice-desc">게임 산업을 속속들이 알아</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-wide" id="q2-next" onclick="nextQ(2)" disabled>다음 →</button>
+  </div>
+
+  <!-- ═══════════ SCREEN 4: Q3 일하는 방식 ═══════════ -->
+  <div class="screen" id="screen-q3">
+    <div class="q-header w-full">
+      <div class="q-stage-tag">⚙️ 일하는 방식</div>
+      <div class="q-title">앞으로 어떻게<br>일하고 싶으세요?</div>
+      <div class="q-sub">솔직한 마음을 하나 골라주세요!</div>
+    </div>
+
+    <div class="choices-grid cols1 w-full mb-20" id="q3-choices">
+      <div class="choice-card" data-val="freelance" onclick="singleSelect(this,'q3')">
+        <div style="display:flex;align-items:center;gap:12px;text-align:left">
+          <span style="font-size:28px">🕊️</span>
+          <div>
+            <div class="choice-label">"내 시간은 내가 정한다"</div>
+            <div class="choice-desc">프리랜서·컨설턴트로 자유롭게 일하고 싶어</div>
+          </div>
+        </div>
+      </div>
+      <div class="choice-card" data-val="employment" onclick="singleSelect(this,'q3')">
+        <div style="display:flex;align-items:center;gap:12px;text-align:left">
+          <span style="font-size:28px">🏢</span>
+          <div>
+            <div class="choice-label">"월급이 제일 편해"</div>
+            <div class="choice-desc">안정적인 직장에 다시 취업하고 싶어</div>
+          </div>
+        </div>
+      </div>
+      <div class="choice-card" data-val="teach" onclick="singleSelect(this,'q3')">
+        <div style="display:flex;align-items:center;gap:12px;text-align:left">
+          <span style="font-size:28px">🎓</span>
+          <div>
+            <div class="choice-label">"내 경험을 나누고 싶어"</div>
+            <div class="choice-desc">강사·멘토로서 지식을 전수하고 싶어</div>
+          </div>
+        </div>
+      </div>
+      <div class="choice-card" data-val="startup" onclick="singleSelect(this,'q3')">
+        <div style="display:flex;align-items:center;gap:12px;text-align:left">
+          <span style="font-size:28px">💡</span>
+          <div>
+            <div class="choice-label">"내 사업을 하고 싶어"</div>
+            <div class="choice-desc">리스크 있어도 창업에 도전하고 싶어</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-wide" id="q3-next" onclick="nextQ(3)" disabled>다음 →</button>
+  </div>
+
+  <!-- ═══════════ SCREEN 5: Q4 목표 ═══════════ -->
+  <div class="screen" id="screen-q4">
+    <div class="q-header w-full">
+      <div class="q-stage-tag">🌠 제2인생 목표</div>
+      <div class="q-title">제2인생에서<br>가장 원하는 것은?</div>
+      <div class="q-sub">솔직하게 하나만 골라주세요!</div>
+    </div>
+
+    <div class="choices-grid cols2 w-full mb-20" id="q4-choices">
+      <div class="choice-card" data-val="money" onclick="singleSelect(this,'q4')">
+        <span class="choice-emoji">💰</span>
+        <div class="choice-label">더 높은 수입</div>
+        <div class="choice-desc">경제적 자유를 원해</div>
+      </div>
+      <div class="choice-card" data-val="balance" onclick="singleSelect(this,'q4')">
+        <span class="choice-emoji">⚖️</span>
+        <div class="choice-label">워라밸·여유</div>
+        <div class="choice-desc">삶의 균형을 찾고 싶어</div>
+      </div>
+      <div class="choice-card" data-val="purpose" onclick="singleSelect(this,'q4')">
+        <span class="choice-emoji">🌟</span>
+        <div class="choice-label">의미 있는 일</div>
+        <div class="choice-desc">가치 있는 일을 하고 싶어</div>
+      </div>
+      <div class="choice-card" data-val="influence" onclick="singleSelect(this,'q4')">
+        <span class="choice-emoji">🏆</span>
+        <div class="choice-label">사회적 인정</div>
+        <div class="choice-desc">전문가로 인정받고 싶어</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-wide" id="q4-next" onclick="analyzeStats()" disabled>역량 분석하기 →</button>
+  </div>
+
+  <!-- ═══════════ SCREEN 6: ANALYZE ═══════════ -->
+  <div class="screen" id="screen-analyze">
+    <div class="analyze-wrap w-full">
+      <div class="analyze-orb"></div>
+      <div class="analyze-text" id="analyze-text">경력 데이터 분석 중...</div>
+      <div class="analyze-sub" id="analyze-sub">20년 QA 역량을 계산하고 있어요!</div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SCREEN 7: STATS ═══════════ -->
+  <div class="screen" id="screen-stats">
+    <div class="stat-screen w-full">
+      <div class="stat-title">💼 <span id="stats-name">실장님</span>의 역량 분석 결과</div>
+      <div class="stat-subtitle">게임 QA 실장 기준 강점 지수</div>
+
+      <div class="stat-card">
+        <div class="stat-row">
+          <div class="stat-icon">💎</div>
+          <div class="stat-info">
+            <div class="stat-name">전문성 <span class="stat-val" id="stat-expertise-val">0%</span></div>
+            <div class="stat-bar-bg"><div class="stat-bar-fill" id="stat-expertise" style="width:0%;background:linear-gradient(90deg,#6c63ff,#8b80ff);--delay:.1s"></div></div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-icon">👑</div>
+          <div class="stat-info">
+            <div class="stat-name">리더십 <span class="stat-val" id="stat-leadership-val">0%</span></div>
+            <div class="stat-bar-bg"><div class="stat-bar-fill" id="stat-leadership" style="width:0%;background:linear-gradient(90deg,#ff6584,#ff85a1);--delay:.2s"></div></div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-icon">💡</div>
+          <div class="stat-info">
+            <div class="stat-name">혁신력 <span class="stat-val" id="stat-innovation-val">0%</span></div>
+            <div class="stat-bar-bg"><div class="stat-bar-fill" id="stat-innovation" style="width:0%;background:linear-gradient(90deg,#43e97b,#38f9d7);--delay:.3s"></div></div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-icon">🌐</div>
+          <div class="stat-info">
+            <div class="stat-name">네트워크 <span class="stat-val" id="stat-network-val">0%</span></div>
+            <div class="stat-bar-bg"><div class="stat-bar-fill" id="stat-network" style="width:0%;background:linear-gradient(90deg,#f7971e,#ffd200);--delay:.4s"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tooltip mb-20">
+        <strong id="aptitude-title">🌟 나의 커리어 유형</strong><br>
+        <span id="aptitude-desc">분석 중...</span>
+      </div>
+
+      <button class="btn btn-primary btn-wide" onclick="goCareerSelect()">
+        🗺️ 제2 커리어 탐색하기 →
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════ SCREEN 8: CAREER SELECTION ═══════════ -->
+  <div class="screen" id="screen-career">
+    <div class="q-header w-full">
+      <div class="q-stage-tag">🗺️ 커리어 탐색</div>
+      <div class="q-title" id="career-title">어떤 제2 커리어로<br>나아갈까요?</div>
+      <div class="q-sub">역량에 맞는 경로를 선택해주세요 (추천 기준 포함)</div>
+    </div>
+
+    <div id="career-cards" class="w-full mb-20"></div>
+
+    <button class="btn btn-primary btn-wide" id="career-next" onclick="goStrategy()" disabled>이 길로 가겠습니다! →</button>
+  </div>
+
+  <!-- ═══════════ SCREEN 9: STRATEGY ═══════════ -->
+  <div class="screen" id="screen-strategy">
+    <div class="q-header w-full">
+      <div class="q-stage-tag">⚡ 첫 1년 전략</div>
+      <div class="q-title" id="strategy-title">첫 1년,<br>어떻게 시작할까요?</div>
+      <div class="q-sub">가장 현실적인 시작 방법을 골라주세요!</div>
+    </div>
+
+    <div class="choices-grid cols1 w-full mb-20" id="strategy-choices"></div>
+
+    <button class="btn btn-primary btn-wide" id="strategy-next" onclick="showResult()" disabled>결과 확인하기 →</button>
+  </div>
+
+  <!-- ═══════════ SCREEN 10: RESULT ═══════════ -->
+  <div class="screen" id="screen-result">
+    <div class="result-screen">
+      <div class="result-badge">🎉 제2의 인생 확정!</div>
+      <div class="result-job" id="result-job">QA 컨설턴트</div>
+      <span class="result-emoji-big" id="result-emoji">🔍</span>
+      <div class="result-desc" id="result-desc"></div>
+
+      <div class="result-path">
+        <div class="path-title">📍 나의 커리어 로드맵</div>
+        <div class="path-steps" id="path-steps"></div>
+      </div>
+
+      <div class="result-stats" id="result-stats-grid"></div>
+
+      <div class="resource-card">
+        <div class="resource-title">🔗 지금 바로 활용할 수 있는 링크</div>
+        <div id="resource-links"></div>
+      </div>
+
+      <button class="btn btn-primary btn-wide mb-12" onclick="shareResult()">
+        🔗 결과 공유하기
+      </button>
+      <button class="btn btn-secondary btn-wide" onclick="restartGame()">
+        🔄 다시 해보기
+      </button>
+    </div>
+  </div>
+
+</div><!-- /#app -->
+
+<script>
+// ═══════════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════════
+const G = {
+  name: '실장님',
+  answers: { q1: [], q2: [], q3: null, q4: null },
+  stats: { expertise: 40, leadership: 40, innovation: 40, network: 40 },
+  career: null,
+  strategy: null,
+  step: 0,
+};
+
+const TOTAL_STEPS = 5;
+
+// ═══════════════════════════════════════════════
+// STARS
+// ═══════════════════════════════════════════════
+(function createStars() {
+  const c = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 3 + 1;
+    s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*3}s;`;
+    c.appendChild(s);
+  }
+})();
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress(step) {
+  G.step = step;
+  document.getElementById('progress-fill').style.width = (step / TOTAL_STEPS * 100) + '%';
+  document.querySelectorAll('.stage-dot').forEach((d, i) => {
+    d.classList.remove('done', 'active');
+    if (i < step) d.classList.add('done');
+    else if (i === step) d.classList.add('active');
+  });
+  if (step > 0) document.getElementById('progress-wrap').style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════
+// TITLE → NAME
+// ═══════════════════════════════════════════════
+function startGame() { updateProgress(0); showScreen('name'); }
+
+function setName() {
+  G.name = document.getElementById('name-input').value.trim() || '실장님';
+  updateProgress(0);
+  showScreen('q1');
+}
+
+// ═══════════════════════════════════════════════
+// CHOICE HELPERS
+// ═══════════════════════════════════════════════
+function multiSelect(el, group, max) {
+  const sel = document.querySelectorAll(`#${group}-choices .choice-card.selected`);
+  if (!el.classList.contains('selected') && sel.length >= max) return;
+  el.classList.toggle('selected');
+  const now = document.querySelectorAll(`#${group}-choices .choice-card.selected`);
+  G.answers[group] = Array.from(now).map(c => c.dataset.val);
+  document.getElementById(`${group}-next`).disabled = G.answers[group].length < max;
+}
+
+function singleSelect(el, group) {
+  document.querySelectorAll(`#${group}-choices .choice-card`).forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  G.answers[group] = el.dataset.val;
+  document.getElementById(`${group}-next`).disabled = false;
+}
+
+function nextQ(n) {
+  if (n === 1) showScreen('q2');
+  else if (n === 2) showScreen('q3');
+  else if (n === 3) showScreen('q4');
+}
+
+// ═══════════════════════════════════════════════
+// STAT CALCULATION
+// ═══════════════════════════════════════════════
+function applyBoosts(s, boosts) {
+  Object.entries(boosts).forEach(([k, v]) => s[k] = Math.min(95, s[k] + v));
+}
+
+function analyzeStats() {
+  showScreen('analyze');
+
+  const s = { expertise: 40, leadership: 40, innovation: 40, network: 40 };
+
+  // Q1: 퇴직 이유
+  const q1map = { restructure:{network:5,expertise:5}, burnout:{}, meaning:{innovation:10,leadership:5}, income:{expertise:5,innovation:5}, family:{}, challenge:{innovation:15} };
+  G.answers.q1.forEach(r => applyBoosts(s, q1map[r] || {}));
+
+  // Q2: 강점
+  const q2map = { process:{expertise:20}, mentoring:{leadership:20}, risk:{expertise:15,leadership:5}, data:{expertise:15}, communication:{network:15,leadership:5}, domain:{expertise:15,network:5} };
+  G.answers.q2.forEach(sk => applyBoosts(s, q2map[sk] || {}));
+
+  // Q3: 방식
+  const b3 = { freelance:{innovation:15}, employment:{expertise:10}, teach:{leadership:15}, startup:{innovation:20} }[G.answers.q3] || {};
+  Object.entries(b3).forEach(([k,v]) => s[k] = Math.min(95, s[k]+v));
+
+  // Q4: 목표
+  const b4 = { money:{expertise:10}, balance:{}, purpose:{leadership:10}, influence:{network:10} }[G.answers.q4] || {};
+  Object.entries(b4).forEach(([k,v]) => s[k] = Math.min(95, s[k]+v));
+
+  G.stats = s;
+
+  const msgs = [
+    ['🔍 QA 경력 데이터 스캔 중...', '15년+ 테스트 이력 분석'],
+    ['🧬 역량 유형 계산 중...', '전문성·리더십·혁신력·네트워크 측정'],
+    ['🗺️ 제2 커리어 경로 탐색 중...', '시장 수요와 역량 매칭'],
+    ['✨ 분석 완료!', `${G.name}님만의 커리어 로드맵 완성!`],
+  ];
+  let i = 0;
+  const iv = setInterval(() => {
+    if (i >= msgs.length) { clearInterval(iv); showStatsScreen(); return; }
+    document.getElementById('analyze-text').textContent = msgs[i][0];
+    document.getElementById('analyze-sub').textContent = msgs[i][1];
+    i++;
+  }, 900);
+}
+
+function showStatsScreen() {
+  document.getElementById('stats-name').textContent = G.name;
+  showScreen('stats');
+  updateProgress(1);
+
+  setTimeout(() => {
+    ['expertise','leadership','innovation','network'].forEach((k, i) => {
+      setTimeout(() => {
+        document.getElementById('stat-'+k).style.width = G.stats[k] + '%';
+        document.getElementById('stat-'+k+'-val').textContent = G.stats[k] + '%';
+      }, i * 150);
+    });
+  }, 200);
+
+  const maxKey = Object.entries(G.stats).sort((a,b) => b[1]-a[1])[0][0];
+  const types = {
+    expertise:  { title:'🎯 전문형 (Expert)',     desc:`${G.name}님은 깊은 QA 전문성이 강점이에요. 컨설팅·심사 업무에서 즉시 두각을 나타낼 수 있어요!` },
+    leadership: { title:'🗣️ 멘토형 (Mentor)',     desc:`${G.name}님은 사람을 이끄는 능력이 탁월해요. 강사·교육자 역할에서 진가를 발휘할 거예요!` },
+    innovation: { title:'⚡ 개척형 (Pioneer)',    desc:`${G.name}님은 새 도전에 열정이 넘쳐요. 창업이나 새 분야 개척에 가장 잘 맞아요!` },
+    network:    { title:'🤝 연결형 (Connector)',  desc:`${G.name}님은 사람과 산업을 연결하는 능력이 있어요. 타 산업 이직이나 협업 비즈니스에 강해요!` },
+  };
+  const t = types[maxKey];
+  document.getElementById('aptitude-title').textContent = t.title;
+  document.getElementById('aptitude-desc').textContent = t.desc;
+}
+
+// ═══════════════════════════════════════════════
+// CAREER PATHS
+// ═══════════════════════════════════════════════
+const CAREER_PATHS = [
+  {
+    id: 'consultant', emoji: '🔍', name: 'QA 컨설턴트',
+    subtitle: '프리랜서 · 내 시간, 내 클라이언트',
+    desc: '중소 게임사·IT 스타트업 대상 QA 프로세스 구축·개선 컨설팅. 재직 중 네트워크가 첫 계약의 열쇠예요.',
+    income: '프로젝트당 300~1,500만 원', prep: '3~6개월',
+    match: s => s.expertise >= 70 ? 'high' : s.expertise >= 55 ? 'mid' : 'low',
+  },
+  {
+    id: 'educator', emoji: '🎓', name: '소프트웨어 테스팅 강사',
+    subtitle: '교육자 · 경험을 지식으로',
+    desc: '직업훈련기관·대학·부트캠프에서 QA 방법론·테스트 자동화 강의. ISTQB 자격증이 공신력을 높여줘요.',
+    income: '시간당 10~20만 원', prep: '6개월 (자격증 포함)',
+    match: s => s.leadership >= 65 ? 'high' : s.leadership >= 50 ? 'mid' : 'low',
+  },
+  {
+    id: 'regulator', emoji: '🏛️', name: '게임물관리위원회 심사원',
+    subtitle: '공공기관 · 안정과 전문성',
+    desc: '게임 내용 심의·연령 등급 분류 전문 심사원. QA 경력과 게임 도메인 지식이 직접 적용돼요.',
+    income: '연 3,500~5,000만 원', prep: '채용 공고 모니터링',
+    match: s => (s.expertise + s.network) / 2 >= 60 ? 'high' : 'mid',
+  },
+  {
+    id: 'industry_shift', emoji: '💼', name: '타 산업 QA/PM Manager',
+    subtitle: '이직 · 핀테크·헬스케어로',
+    desc: '게임 외 IT 산업으로 이직. 관리자 역량과 QA 방법론은 어디서나 통용돼요. 이력서 재포지셔닝이 핵심.',
+    income: '현 연봉 수준 ~ +20%', prep: '도메인 공부 3~6개월',
+    match: s => (s.expertise + s.network) / 2 >= 60 ? 'mid' : 'low',
+  },
+  {
+    id: 'startup', emoji: '🚀', name: 'QA 전문 스타트업 창업',
+    subtitle: '창업 · 내가 사장이다',
+    desc: 'QA 아웃소싱·컨설팅 전문 소규모 법인 설립. 초기에는 1인 기업으로 시작해 팀을 키워가요.',
+    income: '초기 불안정 → 3년 후 안정화', prep: '사업자 등록 + 첫 계약',
+    match: s => s.innovation >= 65 ? 'high' : s.innovation >= 50 ? 'mid' : 'low',
+  },
+];
+
+function goCareerSelect() {
+  const container = document.getElementById('career-cards');
+  container.innerHTML = '';
+
+  CAREER_PATHS.forEach(cp => {
+    const lvl = cp.match(G.stats);
+    const txt = { high:'⭐ 강력 추천', mid:'👍 추천', low:'참고용' }[lvl];
+    const cls = { high:'match-high', mid:'match-mid', low:'match-low' }[lvl];
+
+    const card = document.createElement('div');
+    card.className = 'career-card';
+    card.innerHTML = `
+      <div class="career-emoji-big">${cp.emoji}</div>
+      <div class="career-info">
+        <div class="career-name">${cp.name}</div>
+        <div class="career-subtitle">📌 ${cp.subtitle}</div>
+        <div class="career-desc">${cp.desc}</div>
+        <div class="career-meta">💰 ${cp.income} &nbsp;·&nbsp; ⏱️ 준비 ${cp.prep}</div>
+        <span class="career-match ${cls}">${txt}</span>
+      </div>
+    `;
+    card.onclick = () => {
+      document.querySelectorAll('.career-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      G.career = cp;
+      document.getElementById('career-next').disabled = false;
+    };
+    container.appendChild(card);
+  });
+
+  showScreen('career');
+  updateProgress(2);
+}
+
+// ═══════════════════════════════════════════════
+// STRATEGIES
+// ═══════════════════════════════════════════════
+const STRATEGIES = {
+  consultant: {
+    title: '컨설턴트, 어떻게 첫 발을 뗄까요?',
+    choices: [
+      { val:'network',   emoji:'🤝', label:'전 직장 네트워크 활용',  desc:'동료·후배를 통해 첫 클라이언트 확보. 가장 빠른 방법이에요!' },
+      { val:'portfolio', emoji:'📁', label:'포트폴리오 먼저 완성',    desc:'사례 중심 문서로 전문성을 입증한 후 영업 시작.' },
+      { val:'linkedin',  emoji:'💼', label:'LinkedIn 브랜딩 시작',    desc:'QA 인사이트 콘텐츠를 발행해 업계 전문가로 포지셔닝.' },
+    ]
+  },
+  educator: {
+    title: '강사, 어떻게 첫 발을 뗄까요?',
+    choices: [
+      { val:'istqb',    emoji:'📜', label:'ISTQB 자격증 취득',        desc:'CTFL부터 시작해 강의 공신력을 확보해요.' },
+      { val:'hrd',      emoji:'🏫', label:'HRD-Net 국비 과정 등록',   desc:'직업훈련기관 강사로 국비 수강생 대상 강의 시작.' },
+      { val:'bootcamp', emoji:'🖥️', label:'부트캠프 파트타임 강의',   desc:'온라인 플랫폼에서 소규모 강의로 경험을 먼저 쌓아요.' },
+    ]
+  },
+  regulator: {
+    title: '심사원, 어떻게 첫 발을 뗄까요?',
+    choices: [
+      { val:'apply',  emoji:'📢', label:'채용 공고 즉시 지원',       desc:'게임물관리위원회 채용 알림을 설정하고 준비 시작.' },
+      { val:'collab', emoji:'🎮', label:'외부 자문위원 경험 먼저',    desc:'자문으로 관계를 먼저 쌓는 우회 전략.' },
+      { val:'study',  emoji:'📚', label:'게임 정책·법령 공부',        desc:'게임산업진흥법·청소년보호법 선행 학습으로 차별화.' },
+    ]
+  },
+  industry_shift: {
+    title: '이직 준비, 어떻게 첫 발을 뗄까요?',
+    choices: [
+      { val:'reposition', emoji:'📝', label:'이력서 재포지셔닝',       desc:'"게임 QA" → "소프트웨어 품질 전문가"로 프레임 전환.' },
+      { val:'domain',     emoji:'🏦', label:'타 산업 도메인 공부',      desc:'핀테크 ISMS-P · 의료 소프트웨어 QA 지식 획득.' },
+      { val:'headhunt',   emoji:'🎯', label:'헤드헌터 적극 활용',       desc:'관리자급 이직은 헤드헌터 채널이 훨씬 효과적이에요.' },
+    ]
+  },
+  startup: {
+    title: '창업 준비, 어떻게 첫 발을 뗄까요?',
+    choices: [
+      { val:'bizplan',     emoji:'📊', label:'사업계획서 먼저 작성',     desc:'타겟 시장·수익 모델·경쟁사 분석으로 방향을 확정해요.' },
+      { val:'firstclient', emoji:'🤝', label:'첫 계약 후 사업자 등록',   desc:'계약서 사인 후 등록하는 가장 안전한 방법.' },
+      { val:'incubator',   emoji:'🏢', label:'창업 지원 프로그램 활용',  desc:'소진공·고용24 창업 지원금과 멘토링을 활용해요.' },
+    ]
+  },
+};
+
+function goStrategy() {
+  const data = STRATEGIES[G.career.id];
+  document.getElementById('strategy-title').textContent = data.title;
+
+  const container = document.getElementById('strategy-choices');
+  container.innerHTML = '';
+  data.choices.forEach(ch => {
+    const card = document.createElement('div');
+    card.className = 'choice-card';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;text-align:left">
+        <span style="font-size:32px">${ch.emoji}</span>
+        <div>
+          <div class="choice-label">${ch.label}</div>
+          <div class="choice-desc">${ch.desc}</div>
+        </div>
+      </div>
+    `;
+    card.onclick = () => {
+      document.querySelectorAll('#strategy-choices .choice-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      G.strategy = ch.val;
+      document.getElementById('strategy-next').disabled = false;
+    };
+    container.appendChild(card);
+  });
+
+  showScreen('strategy');
+  updateProgress(3);
+}
+
+// ═══════════════════════════════════════════════
+// CAREER OUTCOMES
+// ═══════════════════════════════════════════════
+const OUTCOMES = {
+  consultant: {
+    job:'QA 컨설턴트', emoji:'🔍',
+    desc:'NAME님은 20년 경력을 무기로 프리랜서 QA 컨설턴트가 됐어요! 중소 게임사와 스타트업들이 NAME님의 프로세스를 도입하며 성장하고 있어요. 첫 해는 적응이 필요했지만 이제 연간 3~5개 프로젝트를 소화하는 독립 전문가로 자리잡았어요.',
+  },
+  educator: {
+    job:'소프트웨어 테스팅 강사', emoji:'🎓',
+    desc:'NAME님은 현업의 생생한 경험을 전달하는 명강사가 됐어요! ISTQB 자격증과 실무 사례를 결합한 강의가 업계에서 호평을 받고 있어요. "현직 실장님의 강의"라는 타이틀은 그 어떤 마케팅보다 강력한 차별점이에요.',
+  },
+  regulator: {
+    job:'게임물관리위원회 심사원', emoji:'🏛️',
+    desc:'NAME님은 게임 QA 경력을 바탕으로 게임 등급 분류 전문 심사원이 됐어요! 오랜 게임 경험과 QA 시각이 결합된 심사 의견은 업계에서 신뢰를 받아요. 안정적인 공공기관에서 게임 산업에 기여하는 보람 있는 일이에요.',
+  },
+  industry_shift: {
+    job:'핀테크 QA Manager', emoji:'💼',
+    desc:'NAME님은 게임 QA 역량을 핀테크 산업에 이식하는 데 성공했어요! "게임 QA는 복잡한 시스템과 UX를 동시에 검증한다"는 강점이 금융 IT 분야에서 높은 평가를 받았어요. 새 산업의 도전이 제2 커리어의 새 챕터를 열었어요.',
+  },
+  startup: {
+    job:'QA 스타트업 대표', emoji:'🚀',
+    desc:'NAME님은 소규모 QA 전문 법인을 설립해 대표가 됐어요! 처음엔 혼자 프로젝트를 수행했지만 입소문을 타고 팀이 3명으로 성장했어요. "QA를 우리가 대신 해드립니다"라는 서비스가 스타트업 생태계에 없어서는 안 될 존재가 됐어요.',
+  },
+};
+
+const RESOURCES = {
+  consultant: [
+    { icon:'💼', name:'LinkedIn',           url:'https://www.linkedin.com',      desc:'전문가 네트워킹 · 컨설팅 의뢰 채널' },
+    { icon:'📜', name:'KSTQB (ISTQB 한국)', url:'https://www.kstqb.org',         desc:'국제 소프트웨어 테스팅 자격증 취득' },
+    { icon:'🏛️', name:'SQAT 소프트웨어품질원', url:'https://www.sqat.or.kr',    desc:'품질 전문가 인증·교육 정보' },
+  ],
+  educator: [
+    { icon:'🏫', name:'HRD-Net (직업훈련포털)', url:'https://www.hrd.go.kr',    desc:'국비 지원 강의 과정 등록 · 강사 자격' },
+    { icon:'📚', name:'K-MOOC',             url:'https://www.kmooc.kr',          desc:'무료 온라인 강의 플랫폼 · 강의 개설 가능' },
+    { icon:'💻', name:'패스트캠퍼스',       url:'https://fastcampus.co.kr',      desc:'IT 실무 강의 파트너 강사 모집' },
+  ],
+  regulator: [
+    { icon:'🎮', name:'게임물관리위원회',   url:'https://www.grac.or.kr',        desc:'채용 공고 · 심의 정책 공식 정보' },
+    { icon:'🏢', name:'한국게임산업협회',   url:'https://www.k-games.or.kr',     desc:'게임 산업 동향 · 네트워킹 정보' },
+    { icon:'💼', name:'워크넷',             url:'https://www.work.go.kr',        desc:'공공기관 채용 공고 모니터링' },
+  ],
+  industry_shift: [
+    { icon:'🏢', name:'중장년내일센터',     url:'https://www.nwork.or.kr',       desc:'40~60대 이직 전문 무료 상담 서비스' },
+    { icon:'💼', name:'워크넷',             url:'https://www.work.go.kr',        desc:'IT 분야 채용 공고 · 이력서 등록' },
+    { icon:'🌐', name:'LinkedIn',           url:'https://www.linkedin.com',      desc:'헤드헌터 연결 · 이직 네트워킹 필수' },
+  ],
+  startup: [
+    { icon:'🏭', name:'소상공인시장진흥공단', url:'https://www.sbiz.or.kr',     desc:'창업 교육 · 사업자 등록 지원' },
+    { icon:'📋', name:'고용24',             url:'https://www.work24.go.kr',      desc:'창업 지원금 · 취업지원 통합 창구' },
+    { icon:'🏢', name:'중장년내일센터',     url:'https://www.nwork.or.kr',       desc:'창업 멘토링 · 네트워크 연결 서비스' },
+  ],
+};
+
+function showResult() {
+  const c = G.career;
+  const o = OUTCOMES[c.id];
+  const desc = o.desc.replaceAll('NAME', G.name);
+
+  document.getElementById('result-job').textContent = `미래의 ${o.job}`;
+  document.getElementById('result-emoji').textContent = o.emoji;
+  document.getElementById('result-desc').textContent = desc;
+
+  // Path steps
+  const stratData = STRATEGIES[c.id];
+  const stratChoice = stratData.choices.find(ch => ch.val === G.strategy);
+  const steps = [
+    { stage:'지금 (퇴직 준비 중)',     name:'게임 QA 실장 · 경력 정리 시작', icon:'🎮' },
+    { stage:'준비 단계 (3~6개월)',     name: stratChoice ? stratChoice.label : '준비 시작', icon: stratChoice ? stratChoice.emoji : '📋' },
+    { stage:'전환 단계 (6~12개월)',    name: c.name, icon: c.emoji },
+    { stage:'안착 단계 (2~3년)',       name: `${o.job} · 전문가로 자리매김`, icon: o.emoji },
+  ];
+  document.getElementById('path-steps').innerHTML = steps.map(s => `
+    <div class="path-step">
+      <div class="path-dot">${s.icon}</div>
+      <div class="path-content">
+        <div class="path-stage">${s.stage}</div>
+        <div class="path-name">${s.name}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Stat grid
+  document.getElementById('result-stats-grid').innerHTML = [
+    { emoji:'💎', name:'전문성', key:'expertise' },
+    { emoji:'👑', name:'리더십', key:'leadership' },
+    { emoji:'💡', name:'혁신력', key:'innovation' },
+    { emoji:'🌐', name:'네트워크', key:'network' },
+  ].map(sc => `
+    <div class="result-stat-card">
+      <div class="result-stat-emoji">${sc.emoji}</div>
+      <div class="result-stat-name">${sc.name}</div>
+      <div class="result-stat-val">${G.stats[sc.key]}</div>
+    </div>
+  `).join('');
+
+  // Resource links
+  document.getElementById('resource-links').innerHTML = (RESOURCES[c.id] || []).map(r => `
+    <a class="resource-link" href="${r.url}" target="_blank" rel="noopener">
+      <span class="resource-link-icon">${r.icon}</span>
+      <span class="resource-link-info">
+        <span class="resource-link-name">${r.name}</span>
+        <span class="resource-link-desc">${r.desc}</span>
+      </span>
+      <span class="resource-link-arrow">→</span>
+    </a>
+  `).join('');
+
+  showScreen('result');
+  updateProgress(5);
+  launchConfetti();
+}
+
+// ═══════════════════════════════════════════════
+// CONFETTI
+// ═══════════════════════════════════════════════
+function launchConfetti() {
+  const colors = ['#6c63ff','#ff6584','#43e97b','#f7971e','#ffd200','#fff'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.cssText = `left:${Math.random()*100}vw;background:${colors[Math.floor(Math.random()*colors.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;animation-duration:${2+Math.random()*2}s;border-radius:${Math.random()>.5?'50%':'2px'};`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }, i * 40);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SHARE & RESTART
+// ═══════════════════════════════════════════════
+function shareResult() {
+  const job = G.career ? OUTCOMES[G.career.id]?.job : '전문가';
+  const text = `🎮 나의 제2 커리어 결과: 미래의 ${job}!\n게임 QA 실장 → ${G.career?.name}\n"제2의 인생을 찾아서" 게임으로 커리어 탐색해봐요!`;
+  if (navigator.share) navigator.share({ title:'제2의 인생 커리어 결과', text });
+  else if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => alert('클립보드에 복사됐어요! 지인들에게 공유해보세요 😊'));
+  else alert(text);
+}
+
+function restartGame() {
+  Object.assign(G, { name:'실장님', answers:{ q1:[], q2:[], q3:null, q4:null }, stats:{ expertise:40, leadership:40, innovation:40, network:40 }, career:null, strategy:null, step:0 });
+  document.querySelectorAll('.choice-card, .career-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('button[id$="-next"]').forEach(b => b.disabled = true);
+  ['expertise','leadership','innovation','network'].forEach(k => {
+    const el = document.getElementById('stat-'+k);
+    if (el) { el.style.width = '0%'; document.getElementById('stat-'+k+'-val').textContent = '0%'; }
+  });
+  document.getElementById('name-input').value = '';
+  document.getElementById('progress-wrap').style.display = 'none';
+  updateProgress(0);
+  showScreen('title');
+}
+
+document.getElementById('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') setName(); });
+</script>
+</body>
+</html>
